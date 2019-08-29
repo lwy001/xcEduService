@@ -14,6 +14,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -83,7 +89,6 @@ public class FileSystemService {
         try {
             TrackerServer trackerServer = trackerClient.getConnection();
             //得到storage服务器
-
             StorageServer storeStorage = trackerClient.getStoreStorage(trackerServer);
             //创建storageClient来上传文件
             StorageClient1 storageClient1 = new StorageClient1(trackerServer,storeStorage);
@@ -115,5 +120,91 @@ public class FileSystemService {
             //抛出异常
             ExceptionCast.cast(FileSystemCode.FS_INITFDFSERROR);
         }
+    }
+
+    public void dwload(HttpServletRequest req, HttpServletResponse rep) {
+        String fileId = req.getParameter("fileId");
+        String fileName = req.getParameter("fileName");
+        fileName+=fileId.substring(fileId.lastIndexOf("."));
+        if(fileId == null || fileId.isEmpty() || fileName == null || fileName.isEmpty()){
+            return;
+        }
+        initFdfsConfig();
+        //创建trackerClient
+        TrackerClient trackerClient = new TrackerClient();
+        try {
+            //连接tracker
+            TrackerServer trackerServer = trackerClient.getConnection();
+            //得到storage服务器
+            StorageServer storeStorage = trackerClient.getStoreStorage(trackerServer);
+            //创建storageClient来下载文件
+            StorageClient1 storageClient1 = new StorageClient1(trackerServer,storeStorage);
+
+            byte[] bytes = storageClient1.download_file1(fileId);
+//            File file = new File("e:/asset-myImg.jpg");
+//            if(!file.exists()){
+//                file.getParentFile().mkdirs();
+//                file.createNewFile();
+//            }
+//            FileOutputStream fileOutputStream = new FileOutputStream(file);
+//            fileOutputStream.write(bytes);
+            rep.setContentType("application/x-msdownload");
+            rep.setCharacterEncoding("UTF-8");
+            rep.setHeader("Content-Disposition","attachment;filename="+new String(fileName.getBytes("UTF-8"),"ISO8859-1"));
+            ServletOutputStream out = rep.getOutputStream();
+            out.write(bytes);
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void delFile(String fileId) {
+        if(fileId == null || fileId.isEmpty()){
+            return;
+        }
+        initFdfsConfig();
+        //创建trackerClient
+        TrackerClient trackerClient = new TrackerClient();
+        try {
+            //连接tracker
+            TrackerServer trackerServer = trackerClient.getConnection();
+            //得到storage服务器
+            StorageServer storeStorage = trackerClient.getStoreStorage(trackerServer);
+            //创建storageClient来下载文件
+            StorageClient1 storageClient1 = new StorageClient1(trackerServer,storeStorage);
+
+            // 删除文件
+            storageClient1.delete_file1(fileId);
+            // 删除记录
+            fileSystemRepository.deleteById(fileId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public UploadFileResult queryFile(String fileId) {
+        FileSystem fileSystem = new FileSystem();
+        initFdfsConfig();
+        //创建trackerClient
+        TrackerClient trackerClient = new TrackerClient();
+        try {
+            //连接tracker
+            TrackerServer trackerServer = trackerClient.getConnection();
+            //得到storage服务器
+            StorageServer storeStorage = trackerClient.getStoreStorage(trackerServer);
+            //创建storageClient来下载文件
+            StorageClient1 storageClient1 = new StorageClient1(trackerServer,storeStorage);
+
+            // 删除文件
+            storageClient1.delete_file1(fileId);
+            // 删除记录
+            fileSystemRepository.deleteById(fileId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new UploadFileResult(CommonCode.SUCCESS,fileSystem);
     }
 }
