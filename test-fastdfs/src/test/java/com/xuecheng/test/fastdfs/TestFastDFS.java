@@ -92,7 +92,7 @@ public class TestFastDFS {
             TrackerServer trackerServer = trackerClient.getConnection();
             StorageServer storeStorage = trackerClient.getStoreStorage(trackerServer);
             StorageClient1 storageClient1 = new StorageClient1(trackerServer, storeStorage);
-            FileInfo group1 = storageClient1.query_file_info("group1", "M00/00/00/rBAABl1bZ1CANkvNAAAWh_Cdpwo693.jpg");
+            FileInfo group1 = storageClient1.query_file_info("group1", "M00/00/00/rBAABl1mUrCAMAahAAAWh_Cdpwo864.jpg");
             System.out.println("=============================================");
             System.out.println(group1);
             System.out.println("=============================================");
